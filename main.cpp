@@ -38,6 +38,7 @@ void test()
 
     PointLocation pointLocation(lineSegments);
 
+
 }
 
 void getLineSegments(vector<LineSegment>& lineSegments, long long size)
@@ -53,7 +54,6 @@ void getLineSegments(vector<LineSegment>& lineSegments, long long size)
     for (unsigned int i = 0; i < lineSegments.capacity(); i++)
     {
         double* doubleBlock = (double*)lineBlock;
-
         finLines.read(lineBlock, sizeof(double) * 3);
         lineSegments.emplace_back(doubleBlock[0], doubleBlock[1], doubleBlock[2]);
     }
@@ -64,7 +64,7 @@ void getLineSegments(vector<LineSegment>& lineSegments, long long size)
     std::chrono::duration<double> elapsed = finish - start;
     std::cout << "Time to read lines       : " << elapsed.count()
               << " s\n";
-
+    free(lineBlock);
 }
 
 void getPoints(vector<Point>& points, long long size)
@@ -73,6 +73,7 @@ void getPoints(vector<Point>& points, long long size)
     string fileName = "/Users/muzamil/Desktop/point-location/objects.100M.1583107551.random";
 
     char* lineBlock = new char[sizeof(double) * 2];
+    double* doubleBlock;
 
     auto start = std::chrono::high_resolution_clock::now();
     ifstream finLines(fileName, ios::binary);
@@ -80,7 +81,6 @@ void getPoints(vector<Point>& points, long long size)
     for (unsigned int i = 0; i < points.capacity(); i++)
     {
         double* doubleBlock = (double*)lineBlock;
-
         finLines.read(lineBlock, sizeof(double) * 2);
         points.emplace_back(doubleBlock[0] *-1 , doubleBlock[1] *-1);
     }
@@ -91,16 +91,18 @@ void getPoints(vector<Point>& points, long long size)
     std::chrono::duration<double> elapsed = finish - start;
     std::cout << "Time to read points       : " << elapsed.count()
               << " s\n";
+    free(lineBlock);
 }
 
 int main() {
     vector<LineSegment> lineSegments;
     vector<Point> points;
-    vector<long long> lineSizes = {1000000, 10000000};
+    vector<long long> lineSizes = {1000000, 5000000,10000000};
     vector<long long> pointSizes = {500000,1000000,2000000,5000000,10000000};
     getLineSegments(lineSegments, lineSizes[1]);
     getPoints(points, pointSizes[0]);
 
+    PointLocation pointLocation(lineSegments);
     //test();
     return 0;
 }
