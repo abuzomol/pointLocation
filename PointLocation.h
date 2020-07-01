@@ -14,14 +14,20 @@
 class PointLocation {
 private:
     std::vector<SuperNode> superTree;
-
+    unsigned long long numOfLastLevelLeaves;
     //construct last level of superTree based on sorted xValues of lineSegments.
     void constructLeaves(std::vector<SuperNode> &tree, std::vector<LineSegment> &lineSegments, unsigned long long superHeight,
                          unsigned long long numOfLeaves);
 
     //construct internal nodes of a superTree bottom up. Leaves should have been already constructed using constructLeaves function
     void constructInternalNodes(std::vector<SuperNode> &tree, unsigned long long superHeight, unsigned long long noOfLastLevelLeaves);
-
+    //partition the list of lineSegments into left to a boundary, right to a boundary, crossing one or more slab, and not crossing any boundary
+    void partitionLineSegments(const std::vector<double>& slabs,
+                               std::vector<LineSegment>& lineSegments,
+                               std::vector<std::vector<LineSegment> >& left,
+                               std::vector<std::vector<LineSegment> >& right,
+                               std::vector<LineSegment>& middle,
+                               std::vector<std::vector<LineSegment> >& remainingLineSegments);
     //fill SuperTree with lineSegments
     void fillSuperTREE(std::vector<LineSegment>& lineSegments);
 
@@ -38,6 +44,9 @@ public:
     //returns i-th child of node if exists, otherwise returns nullptr
     SuperNode &getIthChild(SuperNode &node, unsigned long long i);
 
+    bool isLeaf(SuperNode& node);
+
+    SuperNode& getRoot();
 
 };
 

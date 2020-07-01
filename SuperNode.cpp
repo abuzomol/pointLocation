@@ -46,4 +46,5 @@ void SuperNode::setIndex(unsigned long long int index) {
     SuperNode::index = index;
 }
 
-//SuperNode::SuperNode(const std::vector<double> * val, unsigned long long index) :  vall(vall) , index(index) {}
+double SuperNode::getIthVal(unsigned long long i) {return val[i];}
+

@@ -16,7 +16,11 @@ private:
     std::vector<double> val;
     std::vector<HalfLines> leftHalfLines;
     std::vector<HalfLines> rightHalfLines;
+    MultiSlabsLineSegment* middle;
+    unsigned long long index; // index tells the index of this node within the vector that implement a tree structure.
 public:
+    SuperNode(const std::vector<double> &val,unsigned long long index);
+
     const std::vector<double> &getVal() const;
 
     void setVal(const std::vector<double> &val);
@@ -37,11 +41,7 @@ public:
 
     void setIndex(unsigned long long int index);
 
-private:
-    MultiSlabsLineSegment* middle;
-    unsigned long long index; // index tells the index of this node within the vector that implement a tree structure.
-public:
-    SuperNode(const std::vector<double> &val,unsigned long long index);
+    double getIthVal(unsigned long long i);
 };
 
 

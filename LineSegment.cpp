@@ -30,6 +30,11 @@ void LineSegment::setYLeft(double yLeft) {
     LineSegment::yLeft = yLeft;
 }
 
+bool operator==(const LineSegment &lineSegment1, const LineSegment &lineSegment2) {
+    return lineSegment1.getXLeft() == lineSegment2.getXLeft() && lineSegment1.getXRight() == lineSegment2.getXRight() &&
+           lineSegment1.getYLeft() == lineSegment2.getYLeft();
+}
+
 std::ostream &operator<<(std::ostream &os, const LineSegment &lineSegment) {
     os << '(' << lineSegment.getXLeft() << ',' << lineSegment.getXRight() << ',' << lineSegment.getYLeft()
        << ')';

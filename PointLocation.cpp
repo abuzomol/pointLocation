@@ -11,6 +11,13 @@
 
 using namespace std;
 
+//root located at the end of vector tree
+SuperNode& PointLocation::getRoot()
+{
+    return this->superTree.back();
+}
+
+//place the leaves at the beginning of the vector tree
 void PointLocation::constructLeaves(std::vector<SuperNode> &tree, std::vector<LineSegment> &lineSegments,
                                     unsigned long long superHeight,
                                     unsigned long long numOfLeaves) {
@@ -53,7 +60,7 @@ void PointLocation::constructLeaves(std::vector<SuperNode> &tree, std::vector<Li
     tree.emplace_back(values, numOfLeaves - 1);
 }
 
-
+//build internal nodes bottom up after leaves were constructed.
 void PointLocation::constructInternalNodes(std::vector<SuperNode> &tree, unsigned long long superHeight,
                                            unsigned long long noOfLastLevelLeaves) {
     unsigned long long numOfNodes; //number of actual nodes (not including the padded ones)
@@ -106,9 +113,17 @@ void PointLocation::constructInternalNodes(std::vector<SuperNode> &tree, unsigne
         }
     }
 }
-
+//augment tree nodes with lineSegments top down.
 void PointLocation::fillSuperTREE(std::vector<LineSegment> &lineSegments) {
     sort(lineSegments.begin(), lineSegments.end(), YLeftLessThan());
+
+    std::vector<LineSegment> middle;
+    std::vector<std::vector<LineSegment> > left(VAL_SIZE);
+    std::vector<std::vector<LineSegment> > right(VAL_SIZE);
+    std::vector<std::vector<LineSegment> > remainingLineSegments(CHILD_SIZE);
+
+    SuperNode node =  this->getRoot();
+    partitionLineSegments(node.getVal(),lineSegments, left,right,middle, remainingLineSegments);
 
 
 }
@@ -118,7 +133,7 @@ void PointLocation::fillSuperTREE(std::vector<LineSegment> &lineSegments) {
 PointLocation::PointLocation(std::vector<LineSegment> &lineSegments) {
     // find the number of last level leaves, and then the height of the tree
     unsigned long long numOfXValues = 2 * lineSegments.size();
-    unsigned long long numOfLastLevelLeaves = numOfXValues % VAL_SIZE == 0
+    this->numOfLastLevelLeaves = numOfXValues % VAL_SIZE == 0
                                               ? numOfXValues / VAL_SIZE
                                               : numOfXValues / VAL_SIZE + 1;
     unsigned long long superHeight =
@@ -152,8 +167,101 @@ PointLocation::PointLocation(std::vector<LineSegment> &lineSegments) {
     cout << "\ntime to fill the tree: " << elapsed.count();
 }
 
+
+void PointLocation::partitionLineSegments(const vector<double>& slabs,
+                           vector<LineSegment>& lineSegments,
+                           vector<vector<LineSegment> >& left,
+                           vector<vector<LineSegment> >& right,
+                           vector<LineSegment>& middle,
+                           vector<vector<LineSegment> >& remainingLineSegments)
+{
+    // TODO() remove if statements
+    for (auto lineSegment : lineSegments)
+
+    {
+        // for loop that scan every line segment
+        for (int i = 0; i < VAL_SIZE; i++)
+        {
+            // if the lineSegment crosses or touches boundary i
+            if (lineSegment.getXLeft() <= slabs[i]
+                && lineSegment.getXRight() >= slabs[i])
+            {
+                // to the left of first boundary
+                if (i == 0 && lineSegment.getXLeft() < slabs[i])
+                {
+                    left[i].push_back(lineSegment);
+                }
+                // starts at slab i-1
+                if (i > 0 && slabs[i-1] < lineSegment.getXLeft()
+                    && lineSegment.getXLeft() < slabs[i])
+                {
+                    left[i].push_back(lineSegment);
+                }
+                // to the right of last boundary
+
+                if (i == VAL_SIZE - 1
+                    && lineSegment.getXRight() > slabs[i])
+                {
+                    right[i].push_back(lineSegment);
+                }
+
+                // ends at slab i
+                if (i < VAL_SIZE - 1
+                    && lineSegment.getXRight() < slabs[i+1]
+                    && lineSegment.getXRight() > slabs[i])
+                {
+                    right[i].push_back(lineSegment);
+                }
+                // case lineSegment crosses slab i
+                if (i < VAL_SIZE - 1
+                    && lineSegment.getXRight() >= slabs[i+1])
+                {
+                    if (!middle.empty() && middle.back() == lineSegment)
+                        continue;
+                    middle.push_back(lineSegment);
+                }
+            }
+                // case it does not cross any boundary
+            else
+            {
+                // case it ends before first boundary
+                if (i == 0 && lineSegment.getXRight() < slabs[i])
+                {
+                    remainingLineSegments[i].push_back(lineSegment);
+                }
+                // case it starts after last boundary
+                if (i == VAL_SIZE - 1
+                    && lineSegment.getXLeft() > slabs[i])
+                {
+                    remainingLineSegments[i + 1].push_back(lineSegment);
+                }
+                // case it is between two boundaries i and i +1 i.e. b_i < left
+                // x < b_i+1
+
+                if (i > 0 && lineSegment.getXLeft() > slabs[i-1]
+                    && lineSegment.getXRight() < slabs[i])
+                {
+                    remainingLineSegments[i].push_back(lineSegment);
+                }
+            }
+        }
+    }
+}
+
+
 LineSegment &PointLocation::queryPointLocation(Point &point) {
     LineSegment lineSegment(-1, INFTY, -1);
     return lineSegment;
 }
 
+bool PointLocation::isLeaf(SuperNode& node)
+{
+    return node.getIndex() < numOfLastLevelLeaves;
+}
+
+SuperNode & PointLocation::getIthChild(SuperNode &node, unsigned long long i)
+{
+    unsigned long long index = superTree.size()  - node.getIndex();
+    unsigned long long ithChildIndex = superTree.size()  - ((index+1)*CHILD_SIZE - (CHILD_SIZE - 1) + i);
+    return superTree[ithChildIndex];
+}

@@ -31,6 +31,9 @@ public:
                                     const LineSegment& lineSegment);
 };
 
+bool operator==(const LineSegment& lineSegment1,
+                const LineSegment& lineSegment2);
+
 std::ostream& operator<<(std::ostream& os, const LineSegment& lineSegment);
 
 struct YLeftLessThan
