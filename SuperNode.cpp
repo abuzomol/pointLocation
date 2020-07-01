@@ -4,7 +4,7 @@
 
 #include "SuperNode.h"
 
-SuperNode::SuperNode(const std::vector<double> &val, const long long index) : val(std::move(val)), index(index) {}
+SuperNode::SuperNode(const std::vector<double> &val, unsigned long long index) : val(std::move(val)) , index(index) {}
 
 const std::vector<double> &SuperNode::getVal() const {
     return val;
@@ -38,10 +38,12 @@ void SuperNode::setMiddle(MultiSlabsLineSegment *middle) {
     SuperNode::middle = middle;
 }
 
-long long int SuperNode::getIndex() const {
+unsigned long long int SuperNode::getIndex() const {
     return index;
 }
 
-void SuperNode::setIndex(long long int index) {
+void SuperNode::setIndex(unsigned long long int index) {
     SuperNode::index = index;
 }
+
+//SuperNode::SuperNode(const std::vector<double> * val, unsigned long long index) :  vall(vall) , index(index) {}

@@ -62,7 +62,7 @@ void getLineSegments(vector<LineSegment>& lineSegments, long long size)
     auto finish = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double> elapsed = finish - start;
-    std::cout << "Time to read lines       : " << elapsed.count()
+    std::cout << "Time to read " << size <<" lines      : " << elapsed.count()
               << " s\n";
     free(lineBlock);
 }
@@ -89,7 +89,7 @@ void getPoints(vector<Point>& points, long long size)
     auto finish = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double> elapsed = finish - start;
-    std::cout << "Time to read points       : " << elapsed.count()
+    std::cout << "Time to read " << size <<" points       : " << elapsed.count()
               << " s\n";
     free(lineBlock);
 }
@@ -97,9 +97,9 @@ void getPoints(vector<Point>& points, long long size)
 int main() {
     vector<LineSegment> lineSegments;
     vector<Point> points;
-    vector<long long> lineSizes = {1000000, 5000000,10000000};
+    vector<long long> lineSizes = {1000000, 2000000,5000000,10000000};
     vector<long long> pointSizes = {500000,1000000,2000000,5000000,10000000};
-    getLineSegments(lineSegments, lineSizes[1]);
+    getLineSegments(lineSegments, lineSizes[3]);
     getPoints(points, pointSizes[0]);
 
     PointLocation pointLocation(lineSegments);
