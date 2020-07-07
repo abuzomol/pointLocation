@@ -3,3 +3,6 @@
 //
 
 #include "HalfLines.h"
+
+HalfLines::HalfLines(std::vector<LineSegment> &lineSegments, funcType) : tree(std::move(lineSegments)) {
+}

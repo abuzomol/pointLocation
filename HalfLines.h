@@ -9,11 +9,15 @@
 #include "Point.h"
 #include "Node.h"
 
+
+typedef const double &funcType(const double &, const double &);
+
 class HalfLines {
-    std::vector<Node> tree;
+    std::vector<LineSegment> tree;
 public:
-    HalfLines(std::vector<LineSegment> & lineSegments);
-    LineSegment query(Point& point);
+    HalfLines(std::vector<LineSegment> &lineSegments, funcType);
+
+    LineSegment query(Point &point);
 };
 
 

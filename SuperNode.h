@@ -14,28 +14,28 @@
 class SuperNode {
 private:
     std::vector<double> val;
-    std::vector<HalfLines> leftHalfLines;
-    std::vector<HalfLines> rightHalfLines;
-    MultiSlabsLineSegment* middle;
+    std::vector<std::vector<LineSegment> > leftHalfLines;
+    std::vector<std::vector<LineSegment> > rightHalfLines;
+    std::vector<LineSegment> middle;
     unsigned long long index; // index tells the index of this node within the vector that implement a tree structure.
 public:
-    SuperNode(const std::vector<double> &val,unsigned long long index);
+    SuperNode(const std::vector<double> &val, unsigned long long index);
 
     const std::vector<double> &getVal() const;
 
     void setVal(const std::vector<double> &val);
 
-    const std::vector<HalfLines> &getLeftHalfLines() const;
+    const std::vector<std::vector<LineSegment> > &getLeftHalfLines() const;
 
-    void setLeftHalfLines(const std::vector<HalfLines> &leftHalfLines);
+    void setLeftHalfLines(const std::vector<std::vector<LineSegment> > &leftHalfLines);
 
-    const std::vector<HalfLines> &getRightHalfLines() const;
+    const std::vector<std::vector<LineSegment> > &getRightHalfLines() const;
 
-    void setRightHalfLines(const std::vector<HalfLines> &rightHalfLines);
+    void setRightHalfLines(const std::vector<std::vector<LineSegment> > &rightHalfLines);
 
-    MultiSlabsLineSegment *getMiddle() const;
+    const std::vector<LineSegment> &getMiddle() const;
 
-    void setMiddle(MultiSlabsLineSegment *middle);
+    void setMiddle(const std::vector<LineSegment> &middle);
 
     unsigned long long int getIndex() const;
 

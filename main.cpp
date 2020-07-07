@@ -99,10 +99,10 @@ int main() {
     vector<Point> points;
     vector<long long> lineSizes = {1000000, 2000000,5000000,10000000};
     vector<long long> pointSizes = {500000,1000000,2000000,5000000,10000000};
-    getLineSegments(lineSegments, lineSizes[3]);
+    getLineSegments(lineSegments, lineSizes[0]);
     getPoints(points, pointSizes[0]);
 
     PointLocation pointLocation(lineSegments);
-    //test();
+   // test();
     return 0;
 }
