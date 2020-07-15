@@ -103,6 +103,6 @@ int main() {
     getPoints(points, pointSizes[0]);
 
     PointLocation pointLocation(lineSegments);
-   // test();
+    //test();
     return 0;
 }

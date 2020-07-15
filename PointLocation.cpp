@@ -9,6 +9,12 @@
 #include "constants.h"
 #include "PointLocation.h"
 
+
+#define all(c) (c).begin(),(c).end()
+#define tr(c, i) for(decltype((c).begin()) i = (c).begin(); i != (c).end(); i++)
+#define pb push_back
+#define mp make_pair
+
 using namespace std;
 
 //constructor that preprocess a list of lineSegments for point location queries.
@@ -46,10 +52,11 @@ PointLocation::PointLocation(std::vector<LineSegment> &lineSegments) {
     cout << "time to construct " << numOfInternalNodes << " internal nodes: " << elapsed.count() << endl;
 
     start = std::chrono::high_resolution_clock::now();
+    cout << "filling SuperTree................. " << endl;
     fillSuperTREE(lineSegments);
     finish = std::chrono::high_resolution_clock::now();
     elapsed = finish - start;
-    cout << "\ntime to fill the tree: " << elapsed.count();
+    cout << "time to fill the tree: " << elapsed.count();
 }
 
 //place the leaves at the beginning of the vector tree
@@ -70,6 +77,21 @@ void PointLocation::constructLeaves(std::vector<SuperNode> &tree, std::vector<Li
     sort(xValues.begin(), xValues.end());
     auto finish = std::chrono::high_resolution_clock::now();
 
+
+    //remove duplicates from xValues
+    start = std::chrono::high_resolution_clock::now();
+    vector<double>::iterator uniqueIterator;
+    uniqueIterator = std::unique(xValues.begin(), xValues.end());
+    xValues.resize(std::distance(xValues.begin(),uniqueIterator));
+    finish = std::chrono::high_resolution_clock::now();
+
+//    for(int i = 0; i < xValues.size(); i++)
+//        cout << xValues[i] << " " ;
+//    cout << endl;
+//
+//    tr(xValues, it)
+//        cout << *it << " ";
+//    cout << endl;
     //add xValues to leaves, and store them at the beginning of array.
     //fastest observed performance, is when we reserve a vector inside the for loop, fill it, and then emplace it back to the tree with index i
 
@@ -80,7 +102,7 @@ void PointLocation::constructLeaves(std::vector<SuperNode> &tree, std::vector<Li
             values.emplace_back(xValues[i * VAL_SIZE + j]);
         }
         //construct the superNode and add it to the tree
-        tree.emplace_back(values, tree.size() );
+        tree.emplace_back(values, tree.size());
     }
     //add the last leaf
     std::vector<double> values;
@@ -100,14 +122,14 @@ void PointLocation::constructLeaves(std::vector<SuperNode> &tree, std::vector<Li
 }
 
 //build internal nodes bottom up after leaves were constructed.
-void PointLocation::constructInternalNodes(std::vector<SuperNode> &tree, unsigned long long height){
+void PointLocation::constructInternalNodes(std::vector<SuperNode> &tree, unsigned long long height) {
     unsigned long long numOfNodes; //number of actual nodes (not including the padded ones)
     unsigned long long numOfLevelNodes; //number of nodes at level i
     //go through every level of the tree and fill the tree vector from left to right.
 
     long long i, j, k; // read as value k at node j in level i
     long long offset; // a dummy variable to speed up calculation, reserving two multiplications
-    for (i = height - 1; i >  -1; i--) {
+    for (i = height - 1; i > -1; i--) {
         numOfLevelNodes = pow(CHILD_SIZE, i); // numOfLevelNodes = B^i
         unsigned long long step = pow(CHILD_SIZE,
                                       height - i); //location of the node with maxValue within subtree
@@ -119,12 +141,15 @@ void PointLocation::constructInternalNodes(std::vector<SuperNode> &tree, unsigne
             numOfNodes = numOfLevelNodes; // numOfLevelNodes = B^i
         }
 
+//        cout << "step:" << step << endl;
+//        cout << "level " << i;
         auto start = std::chrono::high_resolution_clock::now();
-        for (j = 0; j * step < numOfLastLevelLeaves; j++) {
+        for (j = step / CHILD_SIZE - 1; j < numOfLastLevelLeaves; j += step) {
             vector<double> values;
             values.reserve(VAL_SIZE);
-            for (k = 0; k < VAL_SIZE && j * step + k < numOfLastLevelLeaves; k++) {
-                values.emplace_back(tree[j * step + k].getVal().back());
+            //cout << " " << j << " ";
+            for (k = 0; k < VAL_SIZE && j + k < numOfLastLevelLeaves; k++) {
+                values.emplace_back(tree[j + k].getVal().back());
                 //values.emplace_back(tree[j * step + k].val.back());
             }
             //pad last values of the node with some values from last leaves level with infinities
@@ -147,7 +172,7 @@ void PointLocation::constructInternalNodes(std::vector<SuperNode> &tree, unsigne
             for (k = 0; k < VAL_SIZE; k++) {
                 values.emplace_back(INFTY);
             }
-            tree.emplace_back(values, tree.size() );
+            tree.emplace_back(values, tree.size());
         }
     }
 }
@@ -155,6 +180,8 @@ void PointLocation::constructInternalNodes(std::vector<SuperNode> &tree, unsigne
 //augment tree nodes with lineSegments top down.
 void PointLocation::fillSuperTREE(std::vector<LineSegment> &lineSegments) {
     sort(lineSegments.begin(), lineSegments.end(), YLeftLessThan());
+    //LineSegment lineSeg(12, 14, 15);
+    //lineSegments.push_back(lineSeg);
     fillNode(this->getRoot(), lineSegments);
 }
 
@@ -175,80 +202,125 @@ void PointLocation::fillNode(SuperNode &root, std::vector<LineSegment> &lineSegm
         if (remainingLineSegments[i].empty()) {
             continue;
         } else {
-            if (!this->isLastLevelLeaf(root))
+            if (!this->isLastLevelLeaf(root)) {
                 this->fillNode(this->getIthChild(root, i), remainingLineSegments[i]);
-            else
-            {
-                cout << "out of boundary index: " <<root.getIndex() <<endl;
+            }
+            else {
+                tr(root.getVal(),it)
+                    cout << *it << " ";
+                cout << endl;
+
+                tr(remainingLineSegments[i], it)
+                    cout << *it << " ";
+                cout <<endl;
+                cout << "out of boundary index: " << endl ;
             }
         }
     }
 }
 
+//partition lineSegments into left, right middle, and non-boundary intersecting lineSegments.
+//left.size() = right.size() = boundaries.size() = remainingLineSegments - 1
 void PointLocation::partitionLineSegments(const vector<double> &boundaries,
                                           const vector<LineSegment> &lineSegments,
                                           vector<vector<LineSegment> > &left,
                                           vector<vector<LineSegment> > &right,
                                           vector<LineSegment> &middle,
                                           vector<vector<LineSegment> > &remainingLineSegments) {
-    // TODO() remove if statements
+
     for (auto lineSegment : lineSegments) {
-        // for loop that scan every line segment
-        for (int i = 0; i < VAL_SIZE; i++) {
-            // if the lineSegment crosses or touches boundary i
-            if (lineSegment.getXLeft() <= boundaries[i]
-                && lineSegment.getXRight() >= boundaries[i]) {
-                // to the left of first boundary
-                if (i == 0 && lineSegment.getXLeft() < boundaries[i]) {
-                    left[i].push_back(lineSegment);
-                }
-                // starts at slab i-1
-                if (i > 0 && boundaries[i - 1] < lineSegment.getXLeft()
-                    && lineSegment.getXLeft() < boundaries[i]) {
-                    left[i].push_back(lineSegment);
-                }
-                // to the right of last boundary
+        double xLeft = lineSegment.getXLeft();
+        double xRight = lineSegment.getXRight();
 
-                if (i == VAL_SIZE - 1
-                    && lineSegment.getXRight() > boundaries[i]) {
-                    right[i].push_back(lineSegment);
-                }
+        //find first boundary index such that max xLeft <= Boundary
+        auto itStart = lower_bound(boundaries.begin(), boundaries.end(), xLeft);
+        //find first boundary index such that max xRight <= boundary
+        auto itEnd = lower_bound(boundaries.begin(), boundaries.end(), xRight);
 
-                // ends at slab i
-                if (i < VAL_SIZE - 1
-                    && lineSegment.getXRight() < boundaries[i + 1]
-                    && lineSegment.getXRight() > boundaries[i]) {
-                    right[i].push_back(lineSegment);
-                }
-                // case lineSegment crosses slab i
-                if (i < VAL_SIZE - 1
-                    && lineSegment.getXRight() >= boundaries[i + 1]) {
-                    if (!middle.empty() && middle.back() == lineSegment)
-                        continue;
-                    middle.push_back(lineSegment);
-                }
+        //case lineSegment starts after lastValue i.e boundaries[VALSIZE-1] < xLeft
+        if (itStart == boundaries.end()) { // not needed
+            remainingLineSegments.back().push_back(lineSegment);
+        } else {
+            //case lineSegment entirely inside slab i (between boundaries[i-1] < xLeft < xRight < boundaries[i] ), boundaries[-1] = -infinity
+            if (itStart == itEnd) {
+                if (xRight < *itEnd)
+                    remainingLineSegments[itStart - boundaries.begin()].push_back(lineSegment);
+                    //case xRight == *itEnd or xRight = boundaries[i]
+                else
+                    left[itEnd - boundaries.begin()].push_back(lineSegment);
             }
-                // case it does not cross any boundary
+                //case intersecting one or more boundaries
             else {
-                // case it ends before first boundary
-                if (i == 0 && lineSegment.getXRight() < boundaries[i]) {
-                    remainingLineSegments[i].push_back(lineSegment);
+                // case lineSegment starts before boundaries[i]
+                if (xLeft < *itStart) {
+                    left[itStart - boundaries.begin()].push_back(lineSegment);
+                    //handle right end point
+                    if (itEnd == boundaries.end()) // need guard here to avoid Segfault
+                    {
+                        //add to the right of last boundary
+                        right.back().push_back(lineSegment);
+                        // case multi-slab i.e. xLeft < Boundary[VALSIZE-2]
+                        if (itEnd - itStart > 1) {
+                            middle.push_back(lineSegment);
+                        }
+                    } else {
+                        //xRight doesn't touch the boundary[i]
+                        if (xRight < *itEnd) {
+                            right[itEnd - boundaries.begin() - 1].push_back(lineSegment);
+                            //case multi-slab
+                            if (itEnd - itStart > 1) {
+                                middle.push_back(lineSegment);
+                            }
+                        } else {
+                            // it is a case of multi-slab because xLeft <= boundary[i] < xRight = boundary[j] for j >i
+                            middle.push_back(lineSegment);
+                        }
+                    }
                 }
-                // case it starts after last boundary
-                if (i == VAL_SIZE - 1
-                    && lineSegment.getXLeft() > boundaries[i]) {
-                    remainingLineSegments[i + 1].push_back(lineSegment);
-                }
-                // case it is between two boundaries i and i +1 i.e. b_i < left
-                // x < b_i+1
+                    //case xLeft == *itStart
+                else {
+                    //handle right end point
+                    if (itEnd == boundaries.end()) // need guard here to avoid Segfault
+                    {
+                        //add to the right of last boundary
+                        right.back().push_back(lineSegment);
+                        // already a case of multi-slab
+                        middle.push_back(lineSegment);
 
-                if (i > 0 && lineSegment.getXLeft() > boundaries[i - 1]
-                    && lineSegment.getXRight() < boundaries[i]) {
-                    remainingLineSegments[i].push_back(lineSegment);
+                    } else {
+                        //xRight doesn't touch the boundary[i]
+                        if (xRight < *itEnd) {
+                            right[itEnd - boundaries.begin() - 1].push_back(lineSegment);
+                            //case multi-slab
+                            if (itEnd - itStart > 1) {
+                                middle.push_back(lineSegment);
+                            }
+                        } else {
+                            // it is a case of multi-slab because xLeft <= boundary[i] < xRight = boundary[j] for j >i
+                            middle.push_back(lineSegment);
+                        }
+                    }
                 }
             }
         }
     }
+
+//    cout << "left" << endl;
+//    for (int i = 0; i < left.size(); i++) {
+//        cout << boundaries[i] << ": ";
+//        tr(left[i], ij)cout << *ij << " ";
+//        cout << endl;
+//    }
+//    cout << "right" << endl;
+//    for (int i = 0; i < right.size(); i++) {
+//        cout << boundaries[i] << ": ";
+//        tr(right[i], ij)cout << *ij << " ";
+//        cout << endl;
+//    }
+//
+//    cout << "middle" << endl;
+//    tr(middle, ij)cout << *ij << " ";
+//    cout << endl;
 }
 
 
@@ -256,7 +328,6 @@ LineSegment PointLocation::queryPointLocation(Point &point) {
     LineSegment lineSegment(-1, INFTY, -1);
     return lineSegment;
 }
-
 
 
 bool PointLocation::isLastLevelLeaf(SuperNode &node) {
